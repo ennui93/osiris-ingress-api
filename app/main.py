@@ -1,6 +1,9 @@
-from fastapi import FastAPI
+"""This module is a simple setup of fastapi"""
+
 import logging
 import logging.config
+
+from fastapi import FastAPI
 
 logging.config.fileConfig(fname='log.conf')
 
@@ -10,6 +13,9 @@ app = FastAPI()
 
 
 @app.get("/")
-async def root():
+async def root() -> str:
+    """
+    A simple endpoint example
+    """
     logger.info('root requested')
     return {"message": "Hello World"}
