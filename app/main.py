@@ -2,6 +2,7 @@
 
 import logging
 import logging.config
+from typing import Dict
 
 from fastapi import FastAPI
 
@@ -13,7 +14,7 @@ app = FastAPI()
 
 
 @app.get("/")
-async def root() -> str:
+async def root() -> Dict[str, str]:
     """
     A simple endpoint example
     """
