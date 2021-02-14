@@ -18,12 +18,6 @@ $ tox
 
 #### Linting
 
-This will run all the linters for this project.
-
-```sh
-$ tox -e linters
-```
-
 You can also run a single linter specified in tox.ini. For example:
 
 ```sh
