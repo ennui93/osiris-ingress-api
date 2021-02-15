@@ -35,7 +35,7 @@ class Client():
             client_credential=config['Authentication']["secret"]
         )
 
-    def get_access_token(self):
+    def get_access_token(self) -> str:
         """
         Returns the access token
         """
@@ -49,7 +49,7 @@ class Client():
         logger.debug("access_token: %s", result['access_token'])
         return result['access_token']
 
-    def upload_json_file(self, filename):
+    def upload_json_file(self, filename: str):
         """
         Uploads the given file using the ingress api.
         """
