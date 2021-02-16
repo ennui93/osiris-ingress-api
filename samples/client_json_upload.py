@@ -49,7 +49,7 @@ class Client():
         logger.debug("access_token: %s", result['access_token'])
         return result['access_token']
 
-    def upload_json_file(self, filename: str):
+    def upload_json_file(self, filename: str, directory: str):
         """
         Uploads the given file using the ingress api.
         """
@@ -57,12 +57,12 @@ class Client():
         files = {'file': open(filename, 'rb')}
 
         response = requests.post(
-            url=f"{self.host}/uploadfile",
+            url=f"{self.host}/uploadfile/{directory}",
             files=files,
-            headers={'Authorization': 'Bearer ' + self.get_access_token()}
+            headers={'Authorization': self.get_access_token()}
         )
 
-        logger.debug(response.json())
+        logger.debug(response)
 
 
 def main():
@@ -73,8 +73,9 @@ def main():
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     filename = f'{dir_path}/test_file.json'
+    directory = '123456'
 
-    client.upload_json_file(filename)
+    client.upload_json_file(filename, directory)
 
 
 if __name__ == '__main__':
