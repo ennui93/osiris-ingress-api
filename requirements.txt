@@ -2,3 +2,4 @@ fastapi
 requests
 msal
 python-multipart
+azure-storage-blob
