@@ -1,4 +1,4 @@
-"""This module is a simple setup of fastapi"""
+"""The ingress API to upload data to the DataPlatform"""
 
 import logging
 import logging.config
@@ -61,10 +61,9 @@ async def create_upload_file(guid: str, file: UploadFile = File(...),
     """
     logger.debug(token)
 
-    credential = AzureCredential(token)
-
     account_url = config['Storage']["account_url"]
     file_system_name = config['Storage']["file_system_name"]
+    credential = AzureCredential(token)
 
     with DataLakeDirectoryClient(account_url, file_system_name, guid, credential=credential) as directory_client:
         try:
