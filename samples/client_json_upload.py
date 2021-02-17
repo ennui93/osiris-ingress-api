@@ -6,27 +6,13 @@ This module demonstrates how a client can upload an json file to the DataPlatfor
 import logging
 import logging.config
 import os
-import datetime
 
 import configparser
 import requests
 import msal  # pylint: disable=import-error
-from azure.identity import ClientSecretCredential
-
-from azure.core.credentials import AccessToken
-from azure.storage.blob import BlobServiceClient
 
 logging.config.fileConfig(fname='log.conf')
 logger = logging.getLogger(__file__)
-
-
-class MyCredential(object):
-    def __init__(self, token: str, expires_on: int):
-        self.token = token
-        self.expires_on = expires_on
-
-    def get_token(self, *scopes, **kwargs):
-        return AccessToken(self.token, self.expires_on)
 
 
 class Client():
@@ -49,12 +35,6 @@ class Client():
             client_credential=config['Authentication']["secret"]
         )
 
-        self.token_credential = ClientSecretCredential(
-            tenant_id='mjolnerdk.onmicrosoft.com',
-            client_id=config['Authentication']["client_id"],
-            client_secret=config['Authentication']["secret"]
-        )
-
     def get_access_token(self) -> str:
         """
         Returns the access token
@@ -69,7 +49,7 @@ class Client():
         logger.debug("access_token: %s", result['access_token'])
         return result['access_token']
 
-    def upload_json_file(self, filename: str):
+    def upload_json_file(self, filename: str, directory: str):
         """
         Uploads the given file using the ingress api.
         """
@@ -77,22 +57,12 @@ class Client():
         files = {'file': open(filename, 'rb')}
 
         response = requests.post(
-            url=f"{self.host}/uploadfile",
+            url=f"{self.host}/uploadfile/{directory}",
             files=files,
-            headers={'Authorization': 'Bearer ' + self.get_access_token()}
+            headers={'Authorization': self.get_access_token()}
         )
 
-        blob_service_client = BlobServiceClient(account_url='https://energinetstorage.blob.core.windows.net', credential=MyCredential(
-                token=self.get_access_token(),
-                expires_on=int(1000 + datetime.datetime.now().timestamp()) # probably not quite right
-            ))
-
-        account_info = blob_service_client.list_containers()
-
-        logger.debug(account_info)
-        logger.debug(response.json())
-
-        print(list(account_info))
+        logger.debug(response)
 
 
 def main():
@@ -103,8 +73,9 @@ def main():
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     filename = f'{dir_path}/test_file.json'
+    directory = '123456'
 
-    client.upload_json_file(filename)
+    client.upload_json_file(filename, directory)
 
 
 if __name__ == '__main__':

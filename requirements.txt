@@ -2,4 +2,5 @@ fastapi
 requests
 msal
 python-multipart
-azure-storage-blob
+azure-core
+azure-storage-file-datalake
