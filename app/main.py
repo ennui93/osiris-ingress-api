@@ -23,7 +23,7 @@ app = FastAPI()
 oauth2_scheme = OAuth2()
 
 config = configparser.ConfigParser()
-config.read('conf.ini')
+config.read('/etc/config/conf.ini')
 
 
 class AzureCredential():  # pylint: disable=too-few-public-methods
