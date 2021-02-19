@@ -1,11 +1,13 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: my-service
+  name: {{ .Values.appName }}-svc
 spec:
   selector:
-    app: MyApp
+    app: {{ .Values.appName }}
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 9376
+      targetPort: deploy-port
+  type: {{ .Values.service.type }}

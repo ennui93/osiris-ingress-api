@@ -1,0 +1,25 @@
+appName: osiris-ingress
+
+deployment:
+  replicas: 1
+  image:
+    repository: <IMAGENAME>
+    tag: latest
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: false
+  host: 
+  path: /
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: nginx
+
+config:
+  conf.ini: |
+    [Storage]
+    account_url = https://<STORAGE_ACCOUNT>.dfs.core.windows.net/
+    file_system_name = <CONTAINER_NAME>
