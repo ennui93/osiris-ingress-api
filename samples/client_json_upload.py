@@ -73,7 +73,7 @@ def main():
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     filename = f'{dir_path}/test_file.json'
-    directory = '123456'
+    directory = 'testdataset'
 
     client.upload_json_file(filename, directory)
 
