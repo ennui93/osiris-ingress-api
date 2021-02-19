@@ -14,6 +14,7 @@ spec:
     http: 
       paths:
       - path: {{ .Values.ingress.path }}
+        pathType: ImplementationSpecific
         backend:
           service:
             name: {{ .Values.appName }}-svc
