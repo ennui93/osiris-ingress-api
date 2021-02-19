@@ -13,8 +13,8 @@ spec:
   - host: {{ .Values.ingress.host }}
     http: 
       paths:
-      - path: {{ .Value.ingress.path }}
+      - path: {{ .Values.ingress.path }}
         backend:
-          serviceName: {{ .Value.appName }}-svc
+          serviceName: {{ .Values.appName }}-svc
           servicePort: 80
 {{- end -}}
