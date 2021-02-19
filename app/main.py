@@ -18,7 +18,7 @@ logging.config.fileConfig(fname='log.conf')
 
 logger = logging.getLogger("main")
 
-app = FastAPI()
+app = FastAPI(openapi_url='/docs/openapi.json')
 
 oauth2_scheme = OAuth2()
 
@@ -59,6 +59,7 @@ async def create_upload_file(guid: str, file: UploadFile = File(...),
     """
     Upload json file to data storage.
     """
+    logger.info('uploadfile requested')
     logger.debug(token)
 
     account_url = config['Storage']["account_url"]
