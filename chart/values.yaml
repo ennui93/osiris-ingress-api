@@ -22,6 +22,7 @@ config:
   conf.ini: |
     [Misc]
     configuration_file = <CONFIGURATION_FILE>
+    openapi_url = <OPENAPI_URL>
 
     [Storage]
     account_url = https://<STORAGE_ACCOUNT>.dfs.core.windows.net/

@@ -25,7 +25,7 @@ logging.config.fileConfig(fname=config['Misc']["configuration_file"])
 
 logger = logging.getLogger("main")
 
-app = FastAPI(openapi_url='/docs/openapi.json')
+app = FastAPI(openapi_url=config['Misc']["openapi_url"])
 
 api_key_header = APIKeyHeader(name='Authorization', auto_error=True)
 
