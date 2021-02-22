@@ -53,7 +53,7 @@ async def root() -> Dict[str, str]:
     """
     A simple endpoint example.
     """
-    logger.info('root requested')
+    logger.debug('root requested')
     return {"message": "Hello World"}
 
 
@@ -63,8 +63,8 @@ async def upload_file(guid: str, file: UploadFile = File(...),
     """
     Upload json file to data storage.
     """
-    logger.info('uploadfile requested')
-    logger.debug(token)
+    logger.debug('uploadfile requested')
+    logger.debug("Access token: %s", token)
 
     account_url = config['Storage']["account_url"]
     file_system_name = config['Storage']["file_system_name"]
