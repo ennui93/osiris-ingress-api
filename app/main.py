@@ -1,14 +1,15 @@
-"""The ingress API to upload data to the DataPlatform"""
+"""
+The ingress API to upload data to the DataPlatform
+"""
 
-import logging
 import logging.config
 import time
 from typing import Dict
 from http import HTTPStatus
 import configparser
 
-from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
-from fastapi.security import OAuth2
+from fastapi import FastAPI, UploadFile, File, HTTPException, Security
+from fastapi.security.api_key import APIKeyHeader
 
 from azure.core.credentials import AccessToken  # pylint: disable=import-error
 from azure.storage.filedatalake import DataLakeDirectoryClient  # pylint: disable=import-error
@@ -20,10 +21,12 @@ logger = logging.getLogger("main")
 
 app = FastAPI(openapi_url='/docs/openapi.json')
 
-oauth2_scheme = OAuth2()
+api_key_header = APIKeyHeader(name='Authorization', auto_error=True)
 
 config = configparser.ConfigParser()
-config.read('/etc/config/conf.ini')
+
+all_config_files = ['conf.ini', '/etc/config/conf.ini']
+config.read(all_config_files)
 
 
 class AzureCredential():  # pylint: disable=too-few-public-methods
@@ -55,7 +58,7 @@ async def root() -> Dict[str, str]:
 
 @app.post("/uploadfile/{guid}", status_code=HTTPStatus.CREATED)
 async def create_upload_file(guid: str, file: UploadFile = File(...),
-                             token: str = Depends(oauth2_scheme)) -> Dict[str, str]:
+                             token: str = Security(api_key_header)) -> Dict[str, str]:
     """
     Upload json file to data storage.
     """
