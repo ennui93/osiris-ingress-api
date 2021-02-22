@@ -15,7 +15,13 @@ from azure.core.credentials import AccessToken  # pylint: disable=import-error
 from azure.storage.filedatalake import DataLakeDirectoryClient  # pylint: disable=import-error
 from azure.core.exceptions import ResourceNotFoundError  # pylint: disable=import-error
 
-logging.config.fileConfig(fname='log.conf')
+
+config = configparser.ConfigParser()
+
+all_config_files = ['conf.ini', '/etc/config/conf.ini']
+config.read(all_config_files)
+
+logging.config.fileConfig(fname=config['Misc']["configuration_file"])
 
 logger = logging.getLogger("main")
 
@@ -23,13 +29,8 @@ app = FastAPI(openapi_url='/docs/openapi.json')
 
 api_key_header = APIKeyHeader(name='Authorization', auto_error=True)
 
-config = configparser.ConfigParser()
 
-all_config_files = ['conf.ini', '/etc/config/conf.ini']
-config.read(all_config_files)
-
-
-class AzureCredential():  # pylint: disable=too-few-public-methods
+class AzureCredential:  # pylint: disable=too-few-public-methods
     """
     Represents a Credential object. This is a hack to use a access token
     received from a client.
