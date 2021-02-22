@@ -20,6 +20,45 @@ ingress:
 
 config:
   conf.ini: |
+    [Misc]
+    configuration_file = log.conf
+
     [Storage]
     account_url = https://<STORAGE_ACCOUNT>.dfs.core.windows.net/
     file_system_name = <CONTAINER_NAME>
+  log.conf: |
+    [loggers]
+    keys=root,main
+
+    [handlers]
+    keys=consoleHandler,fileHandler
+
+    [formatters]
+    keys=fileFormatter,consoleFormatter
+
+    [logger_root]
+    level=DEBUG
+    handlers=consoleHandler
+
+    [logger_main]
+    level=INFO
+    handlers=consoleHandler
+    qualname=main
+    propagate=0
+
+    [handler_consoleHandler]
+    class=StreamHandler
+    formatter=consoleFormatter
+    args=(sys.stdout,)
+
+    [handler_fileHandler]
+    class=FileHandler
+    formatter=fileFormatter
+    args=('logfile.log',)
+
+    [formatter_fileFormatter]
+    format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+    datefmt=
+
+    [formatter_consoleFormatter]
+    format=%(levelname)s: %(name)s - %(message)s
