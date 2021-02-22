@@ -1,0 +1,8 @@
+fastapi
+requests
+msal
+python-multipart
+azure-core
+azure-storage-file-datalake
+pytest-mock
+mock
