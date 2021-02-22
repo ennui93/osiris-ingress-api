@@ -58,7 +58,7 @@ async def root() -> Dict[str, str]:
 
 @app.post("/uploadfile/{guid}", status_code=HTTPStatus.CREATED)
 async def upload_file(guid: str, file: UploadFile = File(...),
-                             token: str = Security(api_key_header)) -> Dict[str, str]:
+                      token: str = Security(api_key_header)) -> Dict[str, str]:
     """
     Upload json file to data storage.
     """
