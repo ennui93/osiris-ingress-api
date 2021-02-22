@@ -47,5 +47,6 @@ def test_upload_file(directory_client):
             files={'file': tmp}
         )
 
+    assert directory_client.called
     assert response.status_code == 201
     assert response.json() == {'filename': filename}
