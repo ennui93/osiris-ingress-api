@@ -8,7 +8,7 @@ import configparser
 
 from fastapi import FastAPI
 
-from app.routers import uploads
+from .routers import uploads
 
 
 config = configparser.ConfigParser()
