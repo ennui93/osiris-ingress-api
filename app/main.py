@@ -3,17 +3,12 @@ The ingress API to upload data to the DataPlatform
 """
 
 import logging.config
-import time
 from typing import Dict
-from http import HTTPStatus
 import configparser
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Security
-from fastapi.security.api_key import APIKeyHeader
+from fastapi import FastAPI
 
-from azure.core.credentials import AccessToken  # pylint: disable=import-error
-from azure.storage.filedatalake import DataLakeDirectoryClient  # pylint: disable=import-error
-from azure.core.exceptions import ResourceNotFoundError  # pylint: disable=import-error
+from .routers import uploads
 
 
 config = configparser.ConfigParser()
@@ -21,31 +16,12 @@ config = configparser.ConfigParser()
 all_config_files = ['conf.ini', '/etc/config/conf.ini']
 config.read(all_config_files)
 
-logging.config.fileConfig(fname=config['Misc']["configuration_file"])
-
-logger = logging.getLogger("main")
+logging.config.fileConfig(fname=config['Misc']["configuration_file"], disable_existing_loggers=False)
+logger = logging.getLogger(__file__)
 
 app = FastAPI(openapi_url=config['Misc']["openapi_url"])
 
-api_key_header = APIKeyHeader(name='Authorization', auto_error=True)
-
-
-class AzureCredential:  # pylint: disable=too-few-public-methods
-    """
-    Represents a Credential object. This is a hack to use a access token
-    received from a client.
-    """
-    EXPIRES_IN = 1000
-
-    def __init__(self, token: str):
-        self.token = token
-        self.expires_on = self.EXPIRES_IN + time.time()
-
-    def get_token(self, *scopes, **kwargs):  # pylint: disable=unused-argument
-        """
-        Returns an AcccesToken object.
-        """
-        return AccessToken(self.token, self.expires_on)
+app.include_router(uploads.router)
 
 
 @app.get("/")
@@ -55,36 +31,3 @@ async def root() -> Dict[str, str]:
     """
     logger.debug('root requested')
     return {"message": "Hello World"}
-
-
-@app.post("/uploadfile/{guid}", status_code=HTTPStatus.CREATED)
-async def upload_file(guid: str, file: UploadFile = File(...),
-                      token: str = Security(api_key_header)) -> Dict[str, str]:
-    """
-    Upload json file to data storage.
-    """
-    logger.debug('uploadfile requested')
-    logger.debug("Access token: %s", token)
-
-    account_url = config['Storage']["account_url"]
-    file_system_name = config['Storage']["file_system_name"]
-    credential = AzureCredential(token)
-
-    with DataLakeDirectoryClient(account_url, file_system_name, guid, credential=credential) as directory_client:
-        try:
-            directory_client.get_directory_properties()  # Test if the directory exist otherwise return error.
-        except ResourceNotFoundError as error:
-            logger.error(error)
-            raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-                                detail="The given dataset doesnt exist") from error
-
-        with directory_client.get_file_client(file.filename) as file_client:
-            try:
-                file_client.upload_data(file.file.read(), overwrite=True)
-            except Exception as error:
-                logger.error(type(error).__name__)
-
-                raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                                    detail="File could not be uploaded") from error
-
-    return {"filename": file.filename}

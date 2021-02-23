@@ -11,8 +11,12 @@ import configparser
 import requests
 import msal  # pylint: disable=import-error
 
-logging.config.fileConfig(fname='log.conf')
+logging.config.fileConfig(fname='log.conf', disable_existing_loggers=False)
 logger = logging.getLogger(__file__)
+
+config = configparser.ConfigParser()
+dir_path = os.path.dirname(os.path.realpath(__file__))
+config.read(f'{dir_path}/conf.ini')
 
 
 class Client():
@@ -22,9 +26,6 @@ class Client():
 
     def __init__(self):
         logger.debug("Client class is getting initialized")
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        config = configparser.ConfigParser()
-        config.read(f'{dir_path}/conf.ini')
 
         self.scopes = config['Authentication']["scopes"].split()
         self.host = config['Server']["host"]
@@ -57,7 +58,7 @@ class Client():
         files = {'file': open(filename, 'rb')}
 
         response = requests.post(
-            url=f"{self.host}/uploadfile/{directory}",
+            url=f"{self.host}/upload/json/{directory}",
             files=files,
             headers={'Authorization': self.get_access_token()}
         )
@@ -71,11 +72,10 @@ def main():
     """
     client = Client()
 
-    dir_path = os.path.dirname(os.path.realpath(__file__))
     filename = f'{dir_path}/test_file.json'
-    directory = 'testdataset'
+    guid = config['Misc']['guid']
 
-    client.upload_json_file(filename, directory)
+    client.upload_json_file(filename, guid)
 
 
 if __name__ == '__main__':
