@@ -42,12 +42,12 @@ async def upload_json_file(guid: str, file: UploadFile = File(...),
     credential = AzureCredential(token)
 
     with DataLakeDirectoryClient(account_url, file_system_name, guid, credential=credential) as directory_client:
-        # try:
-        #     directory_client.get_directory_properties()  # Test if the directory exist otherwise return error.
-        # except ResourceNotFoundError as error:
-        #     logger.error(error)
-        #     raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-        #                         detail="The given dataset doesnt exist") from error
+        try:
+            directory_client.get_directory_properties()  # Test if the directory exist otherwise return error.
+        except ResourceNotFoundError as error:
+            logger.error(error)
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
+                                detail="The given dataset doesnt exist") from error
 
         with directory_client.get_file_client(file.filename) as file_client:
             try:
