@@ -21,8 +21,8 @@ ingress:
 config:
   conf.ini: |
     [Misc]
-    configuration_file = <CONFIGURATION_FILE>
-    openapi_url = <OPENAPI_URL>
+    log_configuration_file = <LOG_CONFIGURATION_FILE>
+    root_path = <ROOT_PATH>
 
     [Storage]
     account_url = https://<STORAGE_ACCOUNT>.dfs.core.windows.net/
