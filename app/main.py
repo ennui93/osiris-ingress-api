@@ -19,7 +19,7 @@ config.read(all_config_files)
 logging.config.fileConfig(fname=config['Misc']["log_configuration_file"], disable_existing_loggers=False)
 logger = logging.getLogger(__file__)
 
-app = FastAPI(openapi_url=config['Misc']["openapi_url"])
+app = FastAPI(root_path='/osiris/', openapi_url=config['Misc']["openapi_url"])
 
 app.include_router(uploads.router)
 
