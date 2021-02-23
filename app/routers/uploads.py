@@ -22,7 +22,7 @@ config.read(all_config_files)
 
 api_key_header = APIKeyHeader(name='Authorization', auto_error=True)
 
-logging.config.fileConfig(fname=config['Misc']["configuration_file"], disable_existing_loggers=False)
+logging.config.fileConfig(fname=config['Misc']["log_configuration_file"], disable_existing_loggers=False)
 logger = logging.getLogger(__file__)
 
 router = APIRouter(prefix="/upload", tags=["uploads"])
