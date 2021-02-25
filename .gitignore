@@ -131,3 +131,6 @@ dmypy.json
 # configuration
 conf.ini
 **/myvalues.yaml
+
+# other
+.vscode/
