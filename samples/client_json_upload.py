@@ -50,7 +50,7 @@ class Client():
         logger.debug("access_token: %s", result['access_token'])
         return result['access_token']
 
-    def upload_json_file(self, filename: str, directory: str):
+    def upload_json_file(self, filename: str, directory: str, schema_validate: bool):
         """
         Uploads the given file using the ingress api.
         """
@@ -60,10 +60,11 @@ class Client():
         response = requests.post(
             url=f"{self.host}/upload/json/{directory}",
             files=files,
+            params={'schema_validate': schema_validate},
             headers={'Authorization': self.get_access_token()}
         )
 
-        logger.debug(response)
+        logger.debug("%s: %s", response.status_code, response.text)
 
 
 def main():
@@ -72,10 +73,10 @@ def main():
     """
     client = Client()
 
-    filename = f'{dir_path}/test_file.json'
+    filename = f'{dir_path}/test_file.txt'
     guid = config['Misc']['guid']
 
-    client.upload_json_file(filename, guid)
+    client.upload_json_file(filename, guid, schema_validate=True)
 
 
 if __name__ == '__main__':
