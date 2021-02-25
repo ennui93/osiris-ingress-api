@@ -49,4 +49,4 @@ def test_upload_file(directory_client):
 
     assert directory_client.called
     assert response.status_code == 201
-    assert response.json() == {'filename': filename}
+    assert response.json() == {'filename': filename, 'schema_validated': False}

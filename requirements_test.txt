@@ -4,5 +4,6 @@ msal
 python-multipart
 azure-core
 azure-storage-file-datalake
+fastjsonschema
 pytest-mock
 mock
