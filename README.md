@@ -62,7 +62,7 @@ az ad sp create --id "<appID>"
 Then create a credential for the App Registration:
 
 ``` bash
-az ad app credential reset --id "365f9c66-b4dc-47eb-b311-84c592c441cb"
+az ad app credential reset --id "<appID>"
 ```
 
 **NOTE:** Save the output somewhere secure. The credentials you receive are required to authenticate with the Osiris Ingress API.
@@ -76,14 +76,16 @@ Add the application you created earlier, using the `<YOUR APP NAME>` name, to th
 ## Configuration
 
 The application needs a configuration file *conf.ini* (see *conf.example.ini*). This file must 
-be place in the root of the project or in the location */etc/configuration/conf.ini*.
+be place in the root of the project or in the location */etc/osiris/conf.ini*.
 
 ```
-[Misc]
-log_configuration_file = <log_configuration_file>
+[Logging]
+configuration_file = <configuration_file>.conf
+
+[FastAPI]
 root_path = <root_path>
 
-[Storage]
+[Azure Storage]
 account_url = https://<storage_name>.dfs.core.windows.net/
 file_system_name = <container_name>
 ```

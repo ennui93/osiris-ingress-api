@@ -12,12 +12,12 @@ client = TestClient(app)
 def test_read_main():
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "Hello World"}
+    assert response.json() == {"message": "OK"}
 
 
 def test_upload_file_no_authorization_token():
     response = client.post(
-        "/upload/json/123456",
+        "/123456/json",
     )
 
     assert response.status_code == 403
@@ -26,7 +26,7 @@ def test_upload_file_no_authorization_token():
 
 def test_upload_file_no_file():
     response = client.post(
-        "/upload/json/123456",
+        "/123456/json",
         headers={"Authorization": "secret"},
     )
 
@@ -42,7 +42,7 @@ def test_upload_file(directory_client):
         filename = os.path.basename(tmp.name)
 
         response = client.post(
-            "/upload/json/123456",
+            "/123456/json",
             headers={"Authorization": "secret"},
             files={'file': tmp}
         )

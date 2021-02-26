@@ -3,7 +3,10 @@ Contains dependencies used in several places of the application.
 """
 import time
 
-from azure.core.credentials import AccessToken  # pylint: disable=import-error
+from azure.core.credentials import AccessToken
+
+
+CONFIG_FILE_LOCATIONS = ['conf.ini', '/etc/osiris/conf.ini']
 
 
 class AzureCredential:  # pylint: disable=too-few-public-methods
@@ -11,6 +14,9 @@ class AzureCredential:  # pylint: disable=too-few-public-methods
     Represents a Credential object. This is a hack to use a access token
     received from a client.
     """
+
+    # NOTE: This doesn't necessarily correspond to the token lifetime,
+    # however it doesn't matter as it gets recreated per request
     EXPIRES_IN = 1000
 
     def __init__(self, token: str):

@@ -1,33 +1,36 @@
 """
-The ingress API to upload data to the DataPlatform
+The main application entry-point for the Osiris Ingress API.
 """
 
 import logging.config
 from typing import Dict
 import configparser
 
+from http import HTTPStatus
 from fastapi import FastAPI
 
+from .dependencies import CONFIG_FILE_LOCATIONS
 from .routers import uploads
 
 
 config = configparser.ConfigParser()
+config.read(CONFIG_FILE_LOCATIONS)
 
-all_config_files = ['conf.ini', '/etc/config/conf.ini']
-config.read(all_config_files)
-
-logging.config.fileConfig(fname=config['Misc']["log_configuration_file"], disable_existing_loggers=False)
+logging.config.fileConfig(fname=config['Logging']['configuration_file'], disable_existing_loggers=False)
 logger = logging.getLogger(__file__)
 
-app = FastAPI(root_path=config['Misc']["root_path"])
-
+app = FastAPI(
+    title='Osiris Ingress API',
+    version='0.1.0',
+    root_path=config['FastAPI']['root_path']
+)
 app.include_router(uploads.router)
 
 
-@app.get("/")
+@app.get('/', status_code=HTTPStatus.OK)
 async def root() -> Dict[str, str]:
     """
-    A simple endpoint example.
+    Endpoint for basic connectivity test.
     """
     logger.debug('root requested')
-    return {"message": "Hello World"}
+    return {'message': 'OK'}
