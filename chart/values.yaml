@@ -20,13 +20,15 @@ ingress:
 
 config:
   conf.ini: |
-    [Misc]
-    log_configuration_file = <LOG_CONFIGURATION_FILE>
-    root_path = <ROOT_PATH>
+    [Logging]
+    configuration_file = <configuration_file>.conf
 
-    [Storage]
-    account_url = https://<STORAGE_ACCOUNT>.dfs.core.windows.net/
-    file_system_name = <CONTAINER_NAME>
+    [FastAPI]
+    root_path = <root_path>
+
+    [Azure Storage]
+    account_url = https://<storage_name>.dfs.core.windows.net/
+    file_system_name = <container_name>
   log.conf: |
     [loggers]
     keys=root,main
