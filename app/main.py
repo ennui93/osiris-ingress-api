@@ -2,22 +2,20 @@
 The main application entry-point for the Osiris Ingress API.
 """
 
-import logging.config
 from typing import Dict
-import configparser
+
 
 from http import HTTPStatus
 from fastapi import FastAPI
 
-from .dependencies import CONFIG_FILE_LOCATIONS
+from .dependencies import Configuration
 from .routers import uploads
 
 
-config = configparser.ConfigParser()
-config.read(CONFIG_FILE_LOCATIONS)
+configuration = Configuration(__file__)
+config = configuration.get_config()
+logger = configuration.get_logger()
 
-logging.config.fileConfig(fname=config['Logging']['configuration_file'], disable_existing_loggers=False)
-logger = logging.getLogger(__file__)
 
 app = FastAPI(
     title='Osiris Ingress API',

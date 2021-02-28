@@ -2,8 +2,6 @@
 Contains endpoints for uploading data to the DataPlatform.
 """
 import json
-import configparser
-import logging.config
 
 from http import HTTPStatus
 from typing import Dict, Union
@@ -17,16 +15,15 @@ from fastapi.security.api_key import APIKeyHeader
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.filedatalake import DataLakeDirectoryClient, DataLakeFileClient
 
-from ..dependencies import CONFIG_FILE_LOCATIONS, AzureCredential
+from ..dependencies import Configuration, AzureCredential
 
 
-config = configparser.ConfigParser()
-config.read(CONFIG_FILE_LOCATIONS)
+configuration = Configuration(__file__)
+config = configuration.get_config()
+logger = configuration.get_logger()
 
 access_token_header = APIKeyHeader(name='Authorization', auto_error=True)
 
-logging.config.fileConfig(fname=config['Logging']['configuration_file'], disable_existing_loggers=False)
-logger = logging.getLogger(__file__)
 
 router = APIRouter(tags=['uploads'])
 
