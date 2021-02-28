@@ -57,7 +57,7 @@ class Client:
         files = {'file': open(filename, 'rb')}
 
         response = requests.post(
-            url=f'{self.host}/upload/json/{directory}',
+            url=f'{self.host}/{directory}/json',
             files=files,
             params={'schema_validate': schema_validate},
             headers={'Authorization': self.get_access_token()}
@@ -74,10 +74,11 @@ def main():
     """
     client = Client()
 
-    filename = f'{dir_path}/test_file.txt'
+    filename = f'{dir_path}/test_file.json'
     guid = config['Dataset']['guid']
+    schema_validate = config.getboolean('Dataset', 'schema_validate')
 
-    status_code = client.upload_json_file(filename, guid, schema_validate=True)
+    status_code = client.upload_json_file(filename, guid, schema_validate=schema_validate)
     print(f'Response status code: {status_code}')
 
 
