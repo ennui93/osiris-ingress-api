@@ -1,10 +1,11 @@
-import tempfile
 import os
+import tempfile
 
 from fastapi.testclient import TestClient
-from mock import patch
 
 from app.main import app
+from app.routers.uploads import __get_placement_directory_client
+
 
 client = TestClient(app)
 
@@ -36,8 +37,8 @@ def test_upload_file_no_file():
                                            "type": "value_error.missing"}]}
 
 
-@patch('app.routers.uploads.DataLakeDirectoryClient')
-def test_upload_file(directory_client):
+def test_upload_file(mocker):
+    directory_client = mocker.patch('app.routers.uploads.DataLakeDirectoryClient')
     with tempfile.NamedTemporaryFile(dir='.') as tmp:
         filename = os.path.basename(tmp.name)
 
@@ -50,3 +51,11 @@ def test_upload_file(directory_client):
     assert directory_client.called
     assert response.status_code == 201
     assert response.json() == {'filename': filename, 'schema_validated': False}
+
+
+def test_get_placement_directory_client(mocker):
+    directory_client = mocker.patch('app.routers.uploads.DataLakeDirectoryClient')
+    placement_directory_client = __get_placement_directory_client(directory_client)
+
+    assert directory_client.create_sub_directory.called
+    assert placement_directory_client is not None

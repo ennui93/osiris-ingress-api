@@ -4,6 +4,7 @@ Contains endpoints for uploading data to the DataPlatform.
 import json
 
 from http import HTTPStatus
+from datetime import datetime
 from typing import Dict, Union
 from json.decoder import JSONDecodeError
 
@@ -60,7 +61,8 @@ async def upload_json_file(guid: str,
                 file_client = directory_client.get_file_client(json_schema_file)
                 __validate_json(file_client, file_data)
 
-            file_client = directory_client.get_file_client(file.filename)
+            placement_directory_client = __get_placement_directory_client(directory_client)
+            file_client = placement_directory_client.get_file_client(file.filename)
             try:
                 file_client.upload_data(file_data, overwrite=True)
             except Exception as error:
@@ -116,3 +118,12 @@ def __get_validation_schema(file_client: DataLakeFileClient) -> Dict:
                             detail=f'Malformed schema JSON: {error}') from error
 
     return schema
+
+
+def __get_placement_directory_client(directory_client: DataLakeDirectoryClient) -> DataLakeDirectoryClient:
+    current_datetime = datetime.utcnow()
+
+    return directory_client.create_sub_directory(str(f'{current_datetime.year:02d}')) \
+                           .create_sub_directory(str(f'{current_datetime.month:02d}')) \
+                           .create_sub_directory(str(f'{current_datetime.day:02d}')) \
+                           .create_sub_directory(str(f'{current_datetime.hour:02d}'))
