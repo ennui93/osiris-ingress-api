@@ -57,5 +57,5 @@ def test_get_placement_directory_client(mocker):
     directory_client = mocker.patch('app.routers.uploads.DataLakeDirectoryClient')
     placement_directory_client = __get_placement_directory_client(directory_client)
 
-    assert directory_client.create_sub_directory.called
+    assert directory_client.get_sub_directory_client.called
     assert placement_directory_client is not None

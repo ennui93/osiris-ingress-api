@@ -121,9 +121,7 @@ def __get_validation_schema(file_client: DataLakeFileClient) -> Dict:
 
 
 def __get_placement_directory_client(directory_client: DataLakeDirectoryClient) -> DataLakeDirectoryClient:
-    current_datetime = datetime.utcnow()
+    now = datetime.utcnow()
 
-    return directory_client.create_sub_directory(str(f'{current_datetime.year:02d}')) \
-                           .create_sub_directory(str(f'{current_datetime.month:02d}')) \
-                           .create_sub_directory(str(f'{current_datetime.day:02d}')) \
-                           .create_sub_directory(str(f'{current_datetime.hour:02d}'))
+    path = f'{now.year:02d}/{now.month:02d}/{now.day:02d}/{now.hour:02d}'
+    return directory_client.get_sub_directory_client(path)
