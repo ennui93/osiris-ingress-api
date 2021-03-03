@@ -149,5 +149,5 @@ def __get_validation_schema(file_client: DataLakeFileClient) -> Dict:
 def __get_destination_directory_client(directory_client: DataLakeDirectoryClient) -> DataLakeDirectoryClient:
     now = datetime.utcnow()
 
-    path = f'{now.year:02d}/{now.month:02d}/{now.day:02d}/{now.hour:02d}'
+    path = f'year={now.year:02d}/month={now.month:02d}/day={now.day:02d}/hour={now.hour:02d}'
     return directory_client.get_sub_directory_client(path)
