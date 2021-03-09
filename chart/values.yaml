@@ -1,4 +1,4 @@
-appName: osiris
+appName: osiris-ingress
 
 deployment:
   replicas: 1
