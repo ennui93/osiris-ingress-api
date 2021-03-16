@@ -1,4 +1,5 @@
 import os
+import json
 import tempfile
 
 import pytest
@@ -40,14 +41,13 @@ def test_upload_file_no_file(test_endpoint):
                                            'type': 'value_error.missing'}]}
 
 
-@pytest.mark.parametrize('test_endpoint', ['/123456', '/123456/json'])
-def test_upload_json_file(test_endpoint, mocker):
+def test_upload_file(mocker):
     directory_client = mocker.patch('app.routers.uploads.DataLakeDirectoryClient')
     with tempfile.NamedTemporaryFile(dir='.') as tmp:
         filename = os.path.basename(tmp.name)
 
         response = client.post(
-            test_endpoint,
+            '/123456',
             headers={'Authorization': 'secret'},
             files={'file': tmp}
         )
@@ -55,6 +55,31 @@ def test_upload_json_file(test_endpoint, mocker):
     assert directory_client.called
     assert response.status_code == 201
     assert response.json()['filename'] == filename
+
+
+@pytest.mark.parametrize('schema_validate', [False, True])
+def test_upload_json_file(schema_validate, mocker):
+    mocker.patch('app.routers.uploads.json')
+    directory_client = mocker.patch('app.routers.uploads.DataLakeDirectoryClient')
+    fastjsonschema_validate = mocker.patch('app.routers.uploads.fastjsonschema.validate')
+
+    with tempfile.NamedTemporaryFile(dir='.') as tmp:
+        filename = os.path.basename(tmp.name)
+
+        response = client.post(
+            '/123456/json',
+            headers={'Authorization': 'secret'},
+            files={'file': tmp},
+            params={'schema_validate': schema_validate}
+        )
+
+    assert directory_client.called
+    assert response.status_code == 201
+    assert response.json()['filename'] == filename
+    if schema_validate:
+        assert fastjsonschema_validate.called
+    else:
+        assert not fastjsonschema_validate.called
 
 
 def test_get_placement_directory_client(mocker):
