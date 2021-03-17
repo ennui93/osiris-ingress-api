@@ -1,98 +1,106 @@
 # osiris-ingress-api <!-- omit in toc -->
-- [Data application registration](#data-application-registration)
-  - [Prerequisites](#prerequisites)
-  - [Steps](#steps)
-    - [Create an App Registration](#create-an-app-registration)
-    - [Create a Service Principal and credentials](#create-a-service-principal-and-credentials)
-    - [Grant access to the dataset](#grant-access-to-the-dataset)
+- [Usage](#usage)
+  - [Location of ingressed data](#location-of-ingressed-data)
+  - [Notes on uploading data](#notes-on-uploading-data)
+  - [Uploading arbitrary data](#uploading-arbitrary-data)
+  - [Uploading JSON data](#uploading-json-data)
+    - [Supported JSON Schema versions](#supported-json-schema-versions)
 - [Configuration](#configuration)
   - [Logging](#logging)
 - [Development](#development)
+  - [Running locally](#running-locally)
   - [tox](#tox)
   - [Commands](#commands)
     - [Linting](#linting)
     - [Tests](#tests)
 
-## Data application registration
 
-An App Registration with credentials are required to upload data to the Data Platform through the Osiris Ingress API.
+## Usage
 
-### Prerequisites
+Generated endpoint documentation can be viewed from the endpoints `/docs` and `/redoc` on the running application.
 
-* The dataset has been created through [the Data Platform](https://dataplatform.energinet.dk/).
-* The Azure CLI is installed on your workstation
+Please refer to the generated docs regarding request validation and errors.
 
-### Steps
-Login with the Azure CLI with the following command:
+All the endpoints are based on specifying a `GUID`-resource. Substitute the `{guid}` placeholders with the ID of the DataCatalog dataset or the Azure Storage Account directory you want to upload data to.
 
-``` bash
-az login
+### Location of ingressed data
+When data is written by the application to storage it will be automatically partitioned by ingress time in the following format:
+```
+{guid}/year={now.year:02d}/month={now.month:02d}/day={now.day:02d}/hour={now.hour:02d}
 ```
 
-You can also specify a username and password with:
+This format is chosen to ensure future support for data tools, like Apache Spark.
 
-``` bash
-az login -u <username> -p <password>
+
+### Notes on uploading data
+The file data must be sent in the request body as `multipart/form-data` under the key `file`, i.e.:
+```
+curl -X 'POST' \
+  '<URI>' \
+  -H 'Accept: application/json' \
+  -H 'Content-Type: multipart/form-data' \
+  -F 'file=@testfile.bin;type=application/octet-stream'
 ```
 
-#### Create an App Registration
-The App Registration serves as a registration of trust for your application (or data publishing service) towards the Microsoft Identity Platform (allowing authentication).
+Different endpoints may have specific header requirements, see below.
 
-This is the "identity" of your application.
-Note that an App Registration is globally unique.
+### Uploading arbitrary data
+* `/{guid}`
 
-Run the following command:
-``` bash
-az ad app create --display-name "<YOUR APP NAME>"
+This endpoint uploads data without validation.
+Useful for uploading binary data or pre-validated data. If the uploaded data is much too complex and/or large, the in-memory validations supported by this application will probably fail.
+
+
+### Uploading JSON data
+* `/{guid}/json`
+* `/{guid}/json?schema_validate=true`
+
+This endpoint uploads JSON data. The request fails if the data is not valid JSON.
+
+It has the optional URL parameter `schema_validate` which, if set to `true`, will additionally validate the data against a valid JSON Schema.
+
+The schema file must be placed at the root of the `{guid}` directory and be named `schema.json`.
+
+#### Supported JSON Schema versions
+The supported schema versions is dependant on the pinned version of [fastjsonschema package](https://pypi.org/project/fastjsonschema/)(see `requirements.txt` for version).
+
+The schema file should preferably have a `$schema` directive, for example:
 ```
-
-The application name should be descriptive correlate to the application/service you intend to upload data with.
-
-Take note of the `appId` GUID in the returned object.
-
-
-#### Create a Service Principal and credentials
-The Service Principal and credentials are what enables authorization to the Data Platform.
-
-Create a Service Principal using the `appId` GUID from when creating the App Registration:
-``` bash
-az ad sp create --id "<appID>"
+"$schema": "http://json-schema.org/draft-07/schema#"
 ```
+`fastjsonschema` will fall-back to its' latest supported version, if the above directive is not present in the schema file.
 
-Then create a credential for the App Registration:
-
-``` bash
-az ad app credential reset --id "<appID>"
-```
-
-**NOTE:** Save the output somewhere secure. The credentials you receive are required to authenticate with the Osiris Ingress API.
-
-
-#### Grant access to the dataset
-The application must be granted read- and write-access to the dataset on [the Data Platform](https://dataplatform.energinet.dk/).
-
-Add the application you created earlier, using the `<YOUR APP NAME>` name, to the read- and write-access lists.
 
 ## Configuration
 
-The application needs a configuration file *conf.ini* (see *conf.example.ini*). This file must 
-be place in the root of the project or in the location */etc/osiris/conf.ini*.
+The application needs a configuration file `conf.ini` (see `conf.example.ini`). This file must 
+be placed in the root of the project or in the location `/etc/osiris/conf.ini`.
 
 ```
 [Logging]
+; This points to the logging configuration file.
+; It allows you to setup logging for your specific needs.
+; Follow the format as specified in: 
 configuration_file = <configuration_file>.conf
 
 [FastAPI]
+; You can set the root path of the URI the application will be reached on
+; in case you're behind a proxy.
+; Read more at: https://fastapi.tiangolo.com/advanced/behind-a-proxy/#behind-a-proxy
 root_path = <root_path>
 
 [Azure Storage]
+; The account URL for the Azure Storage Account to use as a storage backend.
 account_url = https://<storage_name>.dfs.core.windows.net/
+; The file system or container you want to use with Osiris Ingress.
 file_system_name = <container_name>
 ```
 
 ### Logging
-Logging can be controlled by defining handlers and formatters using [Logging Configuration](https://docs.python.org/3/library/logging.config.html). 
-The location of the log configuration file (*log_configuration_file *) must be defined in the configuration file of the application. Here is an example configuration:
+Logging can be controlled by defining handlers and formatters using [Logging Configuration](https://docs.python.org/3/library/logging.config.html) and specifically the [config fileformat](https://docs.python.org/3/library/logging.config.html#logging-config-fileformat). 
+The location of the log configuration file (`Logging.configuration_file`) must be defined in the configuration file of the application as mentioned above.
+
+Here is an example configuration:
 
 ```
 [loggers]
@@ -132,12 +140,17 @@ datefmt=
 format=%(levelname)s: %(name)s - %(message)s
 ```
 
-
-
-
-
-
 ## Development
+
+### Running locally
+
+The application can be run locally by using a supported application server, for example `uvicorn`.
+
+The following commands will install `uvicorn` and start serving the application locally.
+```
+pip install uvicorn==0.13.3
+uvicorn app.main:app --reload
+```
 
 ### tox
 

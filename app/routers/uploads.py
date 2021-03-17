@@ -6,7 +6,6 @@ import json
 from http import HTTPStatus
 from datetime import datetime
 from typing import Dict, Union
-from json.decoder import JSONDecodeError
 
 import fastjsonschema
 
@@ -70,8 +69,16 @@ async def upload_json_file(guid: str,
         __check_directory_exist(directory_client)
         destination_directory_client = __get_destination_directory_client(directory_client)
         file_data = file.file.read()
-        if schema_validate:
-            __validate_json(directory_client, json_schema_file_path, file_data)
+        try:
+            json_data = json.loads(file_data.decode())  # Ensures the incoming data is valid JSON
+            if schema_validate:
+                __validate_json_with_schema(directory_client, json_schema_file_path, json_data)
+        except json.JSONDecodeError as error:
+            logger.debug(type(error).__name__, error)
+            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST,
+                                detail={
+                                    'message': f'JSON validation error: {error}'
+                                }) from error
         __upload_file(destination_directory_client, file.filename, file_data)
 
     return {'filename': file.filename, 'schema_validated': schema_validate}
@@ -100,11 +107,11 @@ def __check_directory_exist(directory_client: DataLakeDirectoryClient):
                             detail='The given dataset doesnt exist') from error
 
 
-def __validate_json(directory_client: DataLakeDirectoryClient, json_schema_file_path: str, file_data: bytes):
+def __validate_json_with_schema(directory_client: DataLakeDirectoryClient, json_schema_file_path: str, data_dict: Dict):
     file_client = directory_client.get_file_client(json_schema_file_path)
     schema = __get_validation_schema(file_client)
     try:
-        fastjsonschema.validate(schema, json.loads(file_data.decode()))
+        fastjsonschema.validate(schema, data_dict)
     except (TypeError, fastjsonschema.JsonSchemaDefinitionException) as error:
         logger.error(type(error).__name__, error)
         raise HTTPException(
@@ -114,7 +121,7 @@ def __validate_json(directory_client: DataLakeDirectoryClient, json_schema_file_
         logger.debug(type(error).__name__, error)
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST,
                             detail={
-                                'message': f'Data validation error: {error.message}',
+                                'message': f'JSON Schema validation error: {error.message}',
                                 'name': f'{error.name}',
                                 'rule': f'{error.rule}',
                                 'rule_definition': f'{error.rule_definition}'
@@ -138,7 +145,7 @@ def __get_validation_schema(file_client: DataLakeFileClient) -> Dict:
 
     try:
         schema = json.loads(stream.readall().decode())
-    except JSONDecodeError as error:
+    except json.JSONDecodeError as error:
         logger.error(type(error).__name__, error)
         raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
                             detail=f'Malformed schema JSON: {error}') from error
