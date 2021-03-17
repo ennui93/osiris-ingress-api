@@ -5,3 +5,4 @@ python-multipart
 azure-core
 azure-storage-file-datalake
 fastjsonschema
+starlette_exporter
