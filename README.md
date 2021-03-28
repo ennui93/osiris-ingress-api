@@ -93,7 +93,7 @@ root_path = <root_path>
 ; The account URL for the Azure Storage Account to use as a storage backend.
 account_url = https://<storage_name>.dfs.core.windows.net/
 ; The file system or container you want to use with Osiris Ingress.
-file_system_name = <container_name>
+filesystem_name = <container_name>
 ```
 
 ### Logging

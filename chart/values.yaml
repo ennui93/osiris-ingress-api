@@ -5,6 +5,15 @@ deployment:
   image:
     repository: <IMAGENAME>
     tag: latest
+  livenessProbe:
+    path: /
+    initialDelaySeconds: 15
+    timeoutSeconds: 2
+    periodSeconds: 60
+  readinessProbe:
+    path: /
+    initialDelaySeconds: 15
+    timeoutSeconds: 2
 
 service:
   type: ClusterIP
@@ -32,7 +41,7 @@ config:
 
     [Azure Storage]
     account_url = https://<storage_name>.dfs.core.windows.net/
-    file_system_name = <container_name>
+    filesystem_name = <container_name>
   log.conf: |
     [loggers]
     keys=root,main

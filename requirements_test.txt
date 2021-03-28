@@ -8,3 +8,4 @@ fastjsonschema
 pytest-mock
 mock
 starlette_exporter
+osiris-sdk

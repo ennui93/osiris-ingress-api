@@ -14,8 +14,9 @@ from fastapi.security.api_key import APIKeyHeader
 
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.filedatalake import DataLakeDirectoryClient, DataLakeFileClient
+from osiris.azure_client_authorization import AzureCredential
 
-from ..dependencies import Configuration, AzureCredential
+from ..dependencies import Configuration
 
 
 configuration = Configuration(__file__)
@@ -37,11 +38,7 @@ async def upload_file(guid: str,
     """
     logger.debug('upload file requested')
 
-    account_url = config['Azure Storage']['account_url']
-    file_system_name = config['Azure Storage']['file_system_name']
-    credential = AzureCredential(token)
-
-    with DataLakeDirectoryClient(account_url, file_system_name, guid, credential=credential) as directory_client:
+    with __get_directory_client(token, guid) as directory_client:
         __check_directory_exist(directory_client)
         destination_directory_client = __get_destination_directory_client(directory_client)
         file_data = file.file.read()
@@ -61,11 +58,8 @@ async def upload_json_file(guid: str,
     logger.debug('upload json requested')
 
     json_schema_file_path = 'schema.json'   # NOTE: Could be parameterized in the url
-    account_url = config['Azure Storage']['account_url']
-    file_system_name = config['Azure Storage']['file_system_name']
-    credential = AzureCredential(token)
 
-    with DataLakeDirectoryClient(account_url, file_system_name, guid, credential=credential) as directory_client:
+    with __get_directory_client(token, guid) as directory_client:
         __check_directory_exist(directory_client)
         destination_directory_client = __get_destination_directory_client(directory_client)
         file_data = file.file.read()
@@ -158,3 +152,11 @@ def __get_destination_directory_client(directory_client: DataLakeDirectoryClient
 
     path = f'year={now.year:02d}/month={now.month:02d}/day={now.day:02d}/hour={now.hour:02d}'
     return directory_client.get_sub_directory_client(path)
+
+
+def __get_directory_client(token: str, guid: str) -> DataLakeDirectoryClient:
+    account_url = config['Azure Storage']['account_url']
+    filesystem_name = config['Azure Storage']['filesystem_name']
+    credential = AzureCredential(token)
+
+    return DataLakeDirectoryClient(account_url, filesystem_name, guid, credential=credential)
