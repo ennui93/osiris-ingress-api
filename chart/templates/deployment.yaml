@@ -42,7 +42,7 @@ spec:
           httpGet:
             path: {{ .Values.deployment.readinessProbe.path }}
             port: 80
-          initialDelaySeconds: {  .Values.deployment.readinessProbe.initialDelaySeconds }}
+          initialDelaySeconds: {{ .Values.deployment.readinessProbe.initialDelaySeconds }}
           timeoutSeconds: {{ .Values.deployment.readinessProbe.timeoutSeconds }}
       volumes:
       - name: config-volume
