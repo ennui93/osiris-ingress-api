@@ -15,7 +15,7 @@ from fastapi.security.api_key import APIKeyHeader
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.filedatalake import DataLakeDirectoryClient, DataLakeFileClient
 from osiris.azure_client_authorization import AzureCredential
-from prometheus_client import Info
+from prometheus_client import Counter
 
 from ..dependencies import Configuration
 
@@ -28,8 +28,8 @@ access_token_header = APIKeyHeader(name='Authorization', auto_error=True)
 
 router = APIRouter(tags=['uploads'])
 
-UPLOAD_FILE_GUID_INFO = Info('upload_file_guid', 'Upload file guid')
-UPLOAD_JSON_FILE_GUID_INFO = Info('upload_json_file_guid', 'Upload json file guid')
+UPLOAD_FILE_GUID_COUNTER = Counter('upload_file_guid', 'Upload file guid', ['guid'])
+UPLOAD_JSON_FILE_GUID_COUNTER = Counter('upload_json_file_guid', 'Upload json file guid', ['guid'])
 
 
 @router.post('/{guid}', status_code=HTTPStatus.CREATED)
@@ -40,7 +40,7 @@ async def upload_file(guid: str,
     Upload an arbitrary file to data storage.
     """
     logger.debug('upload file requested')
-    UPLOAD_FILE_GUID_INFO.info({'guid': guid})
+    UPLOAD_FILE_GUID_COUNTER.labels(guid).inc()
 
     with __get_directory_client(token, guid) as directory_client:
         __check_directory_exist(directory_client)
@@ -60,7 +60,7 @@ async def upload_json_file(guid: str,
     Upload json file to data storage with optional schema validation.
     """
     logger.debug('upload json requested')
-    UPLOAD_JSON_FILE_GUID_INFO.info({'guid': guid})
+    UPLOAD_JSON_FILE_GUID_COUNTER.labels(guid).inc()
 
     json_schema_file_path = 'schema.json'   # NOTE: Could be parameterized in the url
 
