@@ -7,4 +7,4 @@ azure-storage-file-datalake
 fastjsonschema
 starlette_exporter
 osiris-sdk
-
+prometheus_client

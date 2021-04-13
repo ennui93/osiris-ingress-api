@@ -28,8 +28,7 @@ access_token_header = APIKeyHeader(name='Authorization', auto_error=True)
 
 router = APIRouter(tags=['uploads'])
 
-UPLOAD_FILE_GUID_COUNTER = Counter('upload_file_guid', 'Upload file guid', ['guid'])
-UPLOAD_JSON_FILE_GUID_COUNTER = Counter('upload_json_file_guid', 'Upload json file guid', ['guid'])
+UPLOADS_GUID_COUNTER = Counter('uploads_guid', 'Uploads method counter on guid', ['method', 'guid'])
 
 
 @router.post('/{guid}', status_code=HTTPStatus.CREATED)
@@ -40,7 +39,7 @@ async def upload_file(guid: str,
     Upload an arbitrary file to data storage.
     """
     logger.debug('upload file requested')
-    UPLOAD_FILE_GUID_COUNTER.labels(guid).inc()
+    UPLOADS_GUID_COUNTER.labels(upload_file.__name__, guid).inc()
 
     with __get_directory_client(token, guid) as directory_client:
         __check_directory_exist(directory_client)
@@ -60,7 +59,7 @@ async def upload_json_file(guid: str,
     Upload json file to data storage with optional schema validation.
     """
     logger.debug('upload json requested')
-    UPLOAD_JSON_FILE_GUID_COUNTER.labels(guid).inc()
+    UPLOADS_GUID_COUNTER.labels(upload_json_file.__name__, guid).inc()
 
     json_schema_file_path = 'schema.json'   # NOTE: Could be parameterized in the url
 
