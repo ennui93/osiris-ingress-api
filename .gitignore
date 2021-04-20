@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # configuration
-conf.ini
+conf1.ini
 **/myvalues.yaml
 
 # other

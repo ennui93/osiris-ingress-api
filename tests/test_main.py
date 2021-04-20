@@ -1,15 +1,21 @@
 import os
-import json
 import tempfile
+from unittest.mock import patch
 
 import pytest
-from fastapi.testclient import TestClient
 
-from app.main import app
+from fastapi.testclient import TestClient
 from app.routers.uploads import __get_destination_directory_client
 
 
-client = TestClient(app)
+def get_app():
+    with patch('app.dependencies.Configuration') as _:
+        from app.main import app
+
+        return TestClient(app)
+
+
+client = get_app()
 
 
 def test_read_main():
