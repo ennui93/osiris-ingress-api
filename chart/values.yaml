@@ -1,8 +1,8 @@
 appName: osiris-ingress
 
 deployment:
-  annotations:
-    sidecar.jaegertracing.io/inject: "true"
+  annotations: {}
+    # sidecar.jaegertracing.io/inject: "true"
 
   replicas: 1
   image:
