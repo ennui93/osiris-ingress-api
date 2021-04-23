@@ -79,6 +79,27 @@ async def upload_json_file(guid: str,
     return {'filename': file.filename, 'schema_validated': schema_validate}
 
 
+@router.post('/{guid}/save_state', status_code=HTTPStatus.CREATED)
+@Metric.histogram
+async def save_state(guid: str,
+                     file: UploadFile = File(...),
+                     token: str = Security(access_token_header)):
+    """
+    Upload state file to data storage - will be called state.json in the root folder.
+    """
+    logger.debug('save state requested')
+
+    with __get_directory_client(token, guid) as directory_client:
+        __check_directory_exist(directory_client)
+
+        file_data = file.file.read()
+        filename = 'state.json'
+
+        __upload_file(directory_client, filename, file_data)
+
+    return {'filename': filename}
+
+
 def __upload_file(directory_client: DataLakeDirectoryClient, filename: str, file_data: bytes):
     try:
         # NOTE: Using get_file_client as a context manager will close the parent DirectoryClient on __exit__
