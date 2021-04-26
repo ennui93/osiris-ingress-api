@@ -14,7 +14,7 @@ from fastapi.security.api_key import APIKeyHeader
 
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.filedatalake import DataLakeDirectoryClient, DataLakeFileClient
-from osiris.azure_client_authorization import AzureCredential
+from osiris.core.azure_client_authorization import AzureCredential
 
 from ..dependencies import Configuration, Metric
 
