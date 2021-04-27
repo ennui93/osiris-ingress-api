@@ -68,9 +68,10 @@ async def upload_json_file(guid: str,
             if schema_validate:
                 __validate_json_with_schema(directory_client, json_schema_file_path, json_data)
         except json.JSONDecodeError as error:
-            logger.debug(type(error).__name__, error)
-            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST,
-                                detail=f'JSON validation error: {error}') from error
+            message = f'({type(error).__name__}) JSON validation error: {error}'
+            logger.error(message)
+            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=message) from error
+
         __upload_file(destination_directory_client, file.filename, file_data)
 
     return {'filename': file.filename, 'schema_validated': schema_validate}
@@ -104,9 +105,9 @@ def __upload_file(directory_client: DataLakeDirectoryClient, filename: str, file
         try:
             file_client.upload_data(file_data, overwrite=True)
         except HttpResponseError as error:
-            logger.error(type(error).__name__, error)
-            raise HTTPException(status_code=error.status_code,
-                                detail=f'An error occurred while uploading file: {error}') from error
+            message = f'({type(error).__name__}) An error occurred while uploading file: {error}'
+            logger.error(message)
+            raise HTTPException(status_code=error.status_code, detail=message) from error
     finally:
         file_client.close()
 
@@ -115,13 +116,13 @@ def __check_directory_exist(directory_client: DataLakeDirectoryClient):
     try:
         directory_client.get_directory_properties()
     except ResourceNotFoundError as error:
-        logger.error(type(error).__name__, error)
-        raise HTTPException(status_code=error.status_code,
-                            detail=f'The given dataset doesnt exist: {error}') from error
+        message = f'({type(error).__name__}) The given dataset doesnt exist: {error}'
+        logger.error(message)
+        raise HTTPException(status_code=error.status_code, detail=message) from error
     except HttpResponseError as error:
-        logger.error(type(error).__name__, error)
-        raise HTTPException(status_code=error.status_code,
-                            detail=f'An error occurred while checking if the dataset exist: {error}') from error
+        message = f'({type(error).__name__}) An error occurred while checking if the dataset exist: {error}'
+        logger.error(message)
+        raise HTTPException(status_code=error.status_code, detail=message) from error
 
 
 def __validate_json_with_schema(directory_client: DataLakeDirectoryClient, json_schema_file_path: str, data_dict: Dict):
@@ -135,7 +136,8 @@ def __validate_json_with_schema(directory_client: DataLakeDirectoryClient, json_
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail=f'Invalid schema definition: {getattr(error, "message", error)}') from error
     except fastjsonschema.JsonSchemaValueException as error:
-        logger.debug(type(error).__name__, error)
+        message = f'({type(error).__name__}) JSON Schema validation error: {error}'
+        logger.error(message)
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST,
                             detail={
                                 'message': f'JSON Schema validation error: {error.message}',
@@ -149,23 +151,23 @@ def __get_validation_schema(file_client: DataLakeFileClient) -> Dict:
     try:
         file_client.get_file_properties()
     except ResourceNotFoundError as error:
-        logger.debug(type(error).__name__, error)
-        raise HTTPException(status_code=error.status_code,
-                            detail=f'The expected JSON Schema does not exist: {error}') from error
+        message = f'({type(error).__name__}) The expected JSON Schema does not exist: {error}'
+        logger.error(message)
+        raise HTTPException(status_code=error.status_code, detail=message) from error
 
     try:
         stream = file_client.download_file()
     except HttpResponseError as error:
-        logger.error(type(error).__name__, error)
-        raise HTTPException(status_code=error.status_code,
-                            detail=f'Schema could not be retrieved for validation: {error}') from error
+        message = f'({type(error).__name__}) Schema could not be retrieved for validation: {error}'
+        logger.error(message)
+        raise HTTPException(status_code=error.status_code, detail=message) from error
 
     try:
         schema = json.loads(stream.readall().decode())
     except json.JSONDecodeError as error:
-        logger.error(type(error).__name__, error)
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                            detail=f'Malformed schema JSON: {error}') from error
+        message = f'({type(error).__name__}) Malformed schema JSON: {error}'
+        logger.error(message)
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=message) from error
 
     return schema
 
