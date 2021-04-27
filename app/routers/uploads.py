@@ -106,7 +106,7 @@ def __upload_file(directory_client: DataLakeDirectoryClient, filename: str, file
         except HttpResponseError as error:
             logger.error(type(error).__name__, error)
             raise HTTPException(status_code=error.status_code,
-                                detail=error.message) from error
+                                detail=f'An error occurred while uploading file: {error}') from error
     finally:
         file_client.close()
 
