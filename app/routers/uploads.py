@@ -12,7 +12,7 @@ import fastjsonschema
 from fastapi import APIRouter, UploadFile, File, HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
 
-from azure.core.exceptions import ResourceNotFoundError
+from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
 from azure.storage.filedatalake import DataLakeDirectoryClient, DataLakeFileClient
 from osiris.core.azure_client_authorization import AzureCredential
 
@@ -63,7 +63,6 @@ async def upload_json_file(guid: str,
         __check_directory_exist(directory_client)
         destination_directory_client = __get_destination_directory_client(directory_client)
         file_data = file.file.read()
-        print('get_dir--- ', file_data)
         try:
             json_data = json.loads(file_data.decode())  # Ensures the incoming data is valid JSON
             if schema_validate:
@@ -71,9 +70,7 @@ async def upload_json_file(guid: str,
         except json.JSONDecodeError as error:
             logger.debug(type(error).__name__, error)
             raise HTTPException(status_code=HTTPStatus.BAD_REQUEST,
-                                detail={
-                                    'message': f'JSON validation error: {error}'
-                                }) from error
+                                detail=f'JSON validation error: {error}') from error
         __upload_file(destination_directory_client, file.filename, file_data)
 
     return {'filename': file.filename, 'schema_validated': schema_validate}
@@ -106,10 +103,10 @@ def __upload_file(directory_client: DataLakeDirectoryClient, filename: str, file
         file_client = directory_client.get_file_client(filename)
         try:
             file_client.upload_data(file_data, overwrite=True)
-        except Exception as error:
+        except HttpResponseError as error:
             logger.error(type(error).__name__, error)
-            raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                                detail='File could not be uploaded') from error
+            raise HTTPException(status_code=error.status_code,
+                                detail=error.message) from error
     finally:
         file_client.close()
 
@@ -119,8 +116,12 @@ def __check_directory_exist(directory_client: DataLakeDirectoryClient):
         directory_client.get_directory_properties()
     except ResourceNotFoundError as error:
         logger.error(type(error).__name__, error)
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-                            detail='The given dataset doesnt exist') from error
+        raise HTTPException(status_code=error.status_code,
+                            detail=f'The given dataset doesnt exist: {error}') from error
+    except HttpResponseError as error:
+        logger.error(type(error).__name__, error)
+        raise HTTPException(status_code=error.status_code,
+                            detail=f'An error occurred while checking if the dataset exist: {error}') from error
 
 
 def __validate_json_with_schema(directory_client: DataLakeDirectoryClient, json_schema_file_path: str, data_dict: Dict):
@@ -149,15 +150,15 @@ def __get_validation_schema(file_client: DataLakeFileClient) -> Dict:
         file_client.get_file_properties()
     except ResourceNotFoundError as error:
         logger.debug(type(error).__name__, error)
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-                            detail='The expected JSON Schema does not exist') from error
+        raise HTTPException(status_code=error.status_code,
+                            detail=f'The expected JSON Schema does not exist: {error}') from error
 
     try:
         stream = file_client.download_file()
-    except Exception as error:
+    except HttpResponseError as error:
         logger.error(type(error).__name__, error)
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                            detail='Schema could not be retrieved for validation') from error
+        raise HTTPException(status_code=error.status_code,
+                            detail=f'Schema could not be retrieved for validation: {error}') from error
 
     try:
         schema = json.loads(stream.readall().decode())

@@ -57,11 +57,11 @@ config:
     keys=fileFormatter,consoleFormatter
 
     [logger_root]
-    level=DEBUG
+    level=ERROR
     handlers=consoleHandler
 
     [logger_main]
-    level=INFO
+    level=ERROR
     handlers=consoleHandler
     qualname=main
     propagate=0
