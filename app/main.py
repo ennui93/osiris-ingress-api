@@ -39,5 +39,4 @@ async def root() -> Dict[str, str]:
     """
     Endpoint for basic connectivity test.
     """
-    logger.debug('root requested')
     return {'message': 'OK'}
