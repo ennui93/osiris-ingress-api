@@ -5,7 +5,7 @@ deployment:
     # sidecar.jaegertracing.io/inject: "true"
 
   replicas: 1
-  revisionHistoryLimit: 3
+  revisionHistoryLimit: 5
   image:
     repository: <IMAGENAME>
     tag: latest
