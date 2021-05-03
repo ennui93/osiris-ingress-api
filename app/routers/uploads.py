@@ -16,8 +16,9 @@ from azure.storage.filedatalake import FileSystemClient, StorageStreamDownloader
 from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
 from azure.storage.filedatalake import DataLakeDirectoryClient, DataLakeFileClient
 from osiris.core.azure_client_authorization import AzureCredential
+from osiris.core.configuration import Configuration
 
-from ..dependencies import Configuration, Metric
+from ..dependencies import Metric
 
 configuration = Configuration(__file__)
 config = configuration.get_config()

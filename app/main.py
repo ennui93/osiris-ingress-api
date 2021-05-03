@@ -7,9 +7,9 @@ from typing import Dict
 
 from http import HTTPStatus
 from fastapi import FastAPI
+from osiris.core.configuration import Configuration
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 
-from .dependencies import Configuration
 from .routers import uploads
 
 
