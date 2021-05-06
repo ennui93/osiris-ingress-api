@@ -8,15 +8,17 @@ from datetime import datetime
 from typing import Dict, Union
 
 import fastjsonschema
-
+from fastapi.responses import StreamingResponse
 from fastapi import APIRouter, UploadFile, File, HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
 
+from azure.storage.filedatalake import FileSystemClient, StorageStreamDownloader
 from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
 from azure.storage.filedatalake import DataLakeDirectoryClient, DataLakeFileClient
 from osiris.core.azure_client_authorization import AzureCredential
+from osiris.core.configuration import Configuration
 
-from ..dependencies import Configuration, Metric
+from ..dependencies import Metric
 
 configuration = Configuration(__file__)
 config = configuration.get_config()
@@ -96,6 +98,42 @@ async def save_state(guid: str,
         __upload_file(directory_client, filename, file_data)
 
     return {'filename': filename}
+
+
+@router.get('/{guid}/retrieve_state', response_class=StreamingResponse)
+@Metric.histogram
+async def retrieve_state(guid: str,
+                         token: str = Security(access_token_header)) -> StreamingResponse:
+    """
+    get state file from data storage from the given guid. This endpoint expects data to be
+    stored in {guid}/state.json
+    """
+    logger.debug('retrieve state requested')
+    with __get_filesystem_client(token) as filesystem_client:
+        directory_client = filesystem_client.get_directory_client(guid)
+        __check_directory_exist(directory_client)
+        stream = __download_file('state.json', directory_client)
+
+    return StreamingResponse(stream.chunks(), media_type='application/octet-stream')
+
+
+def __download_file(filename: str, directory_client: DataLakeDirectoryClient) -> StorageStreamDownloader:
+    file_client = directory_client.get_file_client(filename)
+    try:
+        downloaded_file = file_client.download_file()
+        return downloaded_file
+    except HttpResponseError as error:
+        message = f'({type(error).__name__}) File could not be downloaded: {error}'
+        logger.error(message)
+        raise HTTPException(status_code=error.status_code, detail=message) from error
+
+
+def __get_filesystem_client(token: str) -> FileSystemClient:
+    account_url = config['Azure Storage']['account_url']
+    filesystem_name = config['Azure Storage']['filesystem_name']
+    credential = AzureCredential(token)
+
+    return FileSystemClient(account_url, filesystem_name, credential=credential)
 
 
 def __upload_file(directory_client: DataLakeDirectoryClient, filename: str, file_data: bytes):

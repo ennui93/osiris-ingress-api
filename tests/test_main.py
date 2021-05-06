@@ -9,7 +9,7 @@ from app.routers.uploads import __get_destination_directory_client
 
 
 def get_app():
-    with patch('app.dependencies.Configuration') as _:
+    with patch('osiris.core.configuration.Configuration') as _:
         from app.main import app
 
         return TestClient(app)
