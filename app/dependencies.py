@@ -30,6 +30,7 @@ class Metric:
 
             time_taken = time.time() - start_time
             Metric.HISTOGRAM.labels(func.__name__, kwargs['guid']).observe(time_taken)
+            Metric.HISTOGRAM.labels('status_code', result.status_code)
             return result
 
         return wrapper
