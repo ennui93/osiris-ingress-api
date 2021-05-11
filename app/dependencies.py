@@ -13,7 +13,8 @@ class Metric:
     """
     Class to wrap all metrics for prometheus.
     """
-    HISTOGRAM = Histogram('osiris_ingress_api', 'Osiris Ingress API (method, guid, time)', ['method', 'guid'])
+    HISTOGRAM = Histogram('osiris_ingress_api', 'Osiris Ingress API (method, guid, time)', ['method', 'guid',
+                                                                                            'status_code'])
     COUNTER = Counter('osiris_ingress_api_method_counter',
                       'Osiris Ingress API counter (method, guid)',
                       ['method', 'guid'])
@@ -27,17 +28,15 @@ class Metric:
         async def wrapper(*args, **kwargs):
             start_time = time.time()
 
-            # try:
-            result = await func(*args, **kwargs)
-            # except HTTPException as e:
-            #    time_taken = time.time() - start_time
-            #    Metric.HISTOGRAM.labels(func.__name__, kwargs['guid']).observe(time_taken)
-            #    Metric.HISTOGRAM.labels('status_code', e.status_code)
-            #    raise e
+            try:
+                result = await func(*args, **kwargs)
+            except HTTPException as e:
+                time_taken = time.time() - start_time
+                Metric.HISTOGRAM.labels(func.__name__, kwargs['guid'], e.status_code).observe(time_taken)
+                raise e
 
             time_taken = time.time() - start_time
-            Metric.HISTOGRAM.labels(func.__name__, kwargs['guid']).observe(time_taken)
-            # Metric.HISTOGRAM.labels('status_code', result.status_code)
+            Metric.HISTOGRAM.labels(func.__name__, kwargs['guid'], result.status_code).observe(time_taken)
             return result
 
         return wrapper
