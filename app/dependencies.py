@@ -4,6 +4,7 @@ Contains dependencies used in several places of the application.
 import time
 
 from functools import wraps
+from http import HTTPStatus
 
 from fastapi import HTTPException
 from prometheus_client import Histogram, Counter
@@ -30,13 +31,13 @@ class Metric:
 
             try:
                 result = await func(*args, **kwargs)
-            except HTTPException as e:
+            except HTTPException as error:
                 time_taken = time.time() - start_time
-                Metric.HISTOGRAM.labels(func.__name__, kwargs['guid'], str(e.status_code)).observe(time_taken)
-                raise e
+                Metric.HISTOGRAM.labels(func.__name__, kwargs['guid'], str(error.status_code)).observe(time_taken)
+                raise error
 
             time_taken = time.time() - start_time
-            Metric.HISTOGRAM.labels(func.__name__, kwargs['guid'], str(result.status_code)).observe(time_taken)
+            Metric.HISTOGRAM.labels(func.__name__, kwargs['guid'], HTTPStatus.CREATED).observe(time_taken)
             return result
 
         return wrapper
