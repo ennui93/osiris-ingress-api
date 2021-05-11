@@ -5,6 +5,7 @@ import time
 
 from functools import wraps
 
+from fastapi import HTTPException
 from prometheus_client import Histogram, Counter
 
 
@@ -26,7 +27,13 @@ class Metric:
         async def wrapper(*args, **kwargs):
             start_time = time.time()
 
-            result = await func(*args, **kwargs)
+            try:
+                result = await func(*args, **kwargs)
+            except HTTPException as e:
+                time_taken = time.time() - start_time
+                Metric.HISTOGRAM.labels(func.__name__, kwargs['guid']).observe(time_taken)
+                Metric.HISTOGRAM.labels('status_code', e.status_code)
+                raise e
 
             time_taken = time.time() - start_time
             Metric.HISTOGRAM.labels(func.__name__, kwargs['guid']).observe(time_taken)
