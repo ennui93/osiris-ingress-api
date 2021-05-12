@@ -5,18 +5,20 @@ import json
 
 from http import HTTPStatus
 from datetime import datetime
-from typing import Dict, Union
+from typing import Dict
 
 import fastjsonschema
 from fastapi.responses import StreamingResponse
 from fastapi import APIRouter, UploadFile, File, HTTPException, Security
 from fastapi.security.api_key import APIKeyHeader
+from fastapi.encoders import jsonable_encoder
 
 from azure.storage.filedatalake import FileSystemClient, StorageStreamDownloader
 from azure.core.exceptions import ResourceNotFoundError, HttpResponseError
 from azure.storage.filedatalake import DataLakeDirectoryClient, DataLakeFileClient
 from osiris.core.azure_client_authorization import AzureCredential
 from osiris.core.configuration import Configuration
+from starlette.responses import JSONResponse
 
 from ..dependencies import Metric
 
@@ -29,11 +31,11 @@ access_token_header = APIKeyHeader(name='Authorization', auto_error=True)
 router = APIRouter(tags=['uploads'])
 
 
-@router.post('/{guid}', status_code=HTTPStatus.CREATED)
+@router.post('/{guid}')
 @Metric.histogram
 async def upload_file(guid: str,
                       file: UploadFile = File(...),
-                      token: str = Security(access_token_header)) -> Dict[str, str]:
+                      token: str = Security(access_token_header)) -> JSONResponse:
     """
     Upload an arbitrary file to data storage.
     """
@@ -45,15 +47,16 @@ async def upload_file(guid: str,
         file_data = file.file.read()
         __upload_file(destination_directory_client, file.filename, file_data)
 
-    return {'filename': file.filename}
+    json_response = jsonable_encoder({'filename': file.filename})
+    return JSONResponse(content=json_response, status_code=HTTPStatus.CREATED)
 
 
-@router.post('/{guid}/json', status_code=HTTPStatus.CREATED)
+@router.post('/{guid}/json')
 @Metric.histogram
 async def upload_json_file(guid: str,
                            schema_validate: bool = False,
                            file: UploadFile = File(...),
-                           token: str = Security(access_token_header)) -> Dict[str, Union[str, bool]]:
+                           token: str = Security(access_token_header)) -> JSONResponse:
     """
     Upload json file to data storage with optional schema validation.
     """
@@ -76,14 +79,15 @@ async def upload_json_file(guid: str,
 
         __upload_file(destination_directory_client, file.filename, file_data)
 
-    return {'filename': file.filename, 'schema_validated': schema_validate}
+    json_response = jsonable_encoder({'filename': file.filename, 'schema_validated': schema_validate})
+    return JSONResponse(content=json_response, status_code=HTTPStatus.CREATED)
 
 
-@router.post('/{guid}/save_state', status_code=HTTPStatus.CREATED)
+@router.post('/{guid}/save_state')
 @Metric.histogram
 async def save_state(guid: str,
                      file: UploadFile = File(...),
-                     token: str = Security(access_token_header)):
+                     token: str = Security(access_token_header)) -> JSONResponse:
     """
     Upload state file to data storage - will be called state.json in the root folder.
     """
@@ -97,7 +101,8 @@ async def save_state(guid: str,
 
         __upload_file(directory_client, filename, file_data)
 
-    return {'filename': filename}
+    json_response = jsonable_encoder({'filename': file.filename})
+    return JSONResponse(content=json_response, status_code=HTTPStatus.CREATED)
 
 
 @router.get('/{guid}/retrieve_state', response_class=StreamingResponse)
