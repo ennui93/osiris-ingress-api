@@ -1,4 +1,4 @@
-## Osiris-egress-api Chart
+## Osiris-ingress-api Chart
 
 ### Usage
 This chart comes unconfigured and will need to be configured with the following values to work.
@@ -7,14 +7,14 @@ Undefined values:
 * ```deployment.image.repository```
 * ```ingress.host```
 
-There is also some values in the config file that needs to be configured for the application itself work propely, see [here](https://github.com/Open-Dataplatform/osiris-ingress-api/#configuration)
+There is also some values in the config file that needs to be configured for the application itself work properly, see [here](https://github.com/Open-Dataplatform/osiris-ingress-api/#configuration)
 
 ### Values
 
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `appName` | The overall name | osiris-egress
+| `appName` | The overall name | osiris-ingress
 | `deployment.replicas` | Number of nodes | 1
 | `deployment.image.repository` | The repository of the image | nil
 | `deployment.image.tag` | The tag of the image | latest
